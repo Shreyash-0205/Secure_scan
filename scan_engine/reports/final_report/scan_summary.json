@@ -1,0 +1,19 @@
+{
+    "execution_times": {
+        "HTTP Scanner": 0.056578874588012695,
+        "Broken Authentication Scanner": 0.25815725326538086,
+        "CSRF Scanner": 0.06537389755249023,
+        "SQL Injection Scanner": 0.034886837005615234,
+        "Total Scan Time": 0.47479915618896484,
+        "total_scan": 0.12
+    },
+    "target_urls": [
+        "http://localhost:3000/login",
+        "http://localhost:3000"
+    ],
+    "scan_timestamp": "2025-07-18 10:12:04",
+    "vulnerabilities_found": 2,
+    "high_risk_vulnerabilities": 2,
+    "medium_risk_vulnerabilities": 0,
+    "low_risk_vulnerabilities": 0
+}

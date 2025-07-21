@@ -1,0 +1,17 @@
+{
+    "scans": {
+        "SQLInjectionScanner": {
+            "http://localhost:3000/login": [
+                {
+                    "payload": "' OR '1'='1",
+                    "vulnerable": true,
+                    "severity": "High",
+                    "severity_description": "SQL Injection is critical and can lead to complete database compromise."
+                }
+            ]
+        }
+    },
+    "execution_times": {
+        "sql_injection": 0.03
+    }
+}

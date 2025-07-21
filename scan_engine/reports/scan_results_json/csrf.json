@@ -1,0 +1,19 @@
+{
+    "scans": {
+        "CSRFScanner": {
+            "http://localhost:3000": [
+                {
+                    "form_number": 1,
+                    "method": "POST",
+                    "action": "http://localhost:3000/login",
+                    "csrf_protection": false,
+                    "severity": "High",
+                    "severity_description": "Critical CSRF vulnerability. A malicious user can perform actions on behalf of another user."
+                }
+            ]
+        }
+    },
+    "execution_times": {
+        "csrf": 0.07
+    }
+}

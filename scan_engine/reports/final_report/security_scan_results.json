@@ -1,0 +1,27 @@
+{
+    "scans": {
+        "SQL Injection": {
+            "http://localhost:3000/login": [
+                {
+                    "payload": "' OR '1'='1",
+                    "vulnerable": true,
+                    "severity": "High",
+                    "severity_description": "SQL Injection is critical and can lead to complete database compromise."
+                }
+            ]
+        },
+        "Broken Authentication": {
+            "http://localhost:3000/login": {
+                "Weak Passwords Severity": "High",
+                "Brute Force Protection Severity": "High",
+                "Session Management Severity": "High",
+                "Overall Severity": "High"
+            }
+        }
+    },
+    "execution_times": {
+        "SQL Injection": 0.0445,
+        "Broken Authentication": 0.177,
+        "Total Scan Time": 0.2215
+    }
+}

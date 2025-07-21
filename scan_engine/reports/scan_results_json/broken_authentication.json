@@ -1,0 +1,15 @@
+{
+    "scans": {
+        "BrokenAuthScanner": {
+            "http://localhost:3000/login": {
+                "Weak Passwords Severity": "High",
+                "Brute Force Protection Severity": "High",
+                "Session Management Severity": "High",
+                "Overall Severity": "High"
+            }
+        }
+    },
+    "execution_times": {
+        "broken_authentication": 0.26
+    }
+}

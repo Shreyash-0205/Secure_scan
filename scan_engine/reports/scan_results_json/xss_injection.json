@@ -1,0 +1,22 @@
+{
+    "scans": {
+        "XSSScanner": {
+            "http://localhost:3000/comment": [
+                {
+                    "parameter": "comment",
+                    "payload": "<script>alert('XSS')</script>",
+                    "vulnerable": true,
+                    "severity": "High",
+                    "severity_description": "Critical XSS vulnerability that can easily be exploited. Immediate action is required."
+                }
+            ],
+            "http://localhost:3000/login": [
+                {
+                    "vulnerable": false,
+                    "severity": "Safe",
+                    "severity_description": "No XSS vulnerabilities detected on this page."
+                }
+            ]
+        }
+    }
+}

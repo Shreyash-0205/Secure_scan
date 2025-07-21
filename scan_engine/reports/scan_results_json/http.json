@@ -1,0 +1,21 @@
+{
+    "scans": {
+        "URLSecurityScanner": {
+            "http://localhost:3000": {
+                "protocol": "HTTP",
+                "secure": false,
+                "severity": "High",
+                "severity_description": "Insecure connection using HTTP. HTTPS is recommended for security."
+            },
+            "http://localhost:3000/login": {
+                "protocol": "HTTP",
+                "secure": false,
+                "severity": "High",
+                "severity_description": "Insecure connection using HTTP. HTTPS is recommended for security."
+            }
+        }
+    },
+    "execution_times": {
+        "http": 0.06
+    }
+}

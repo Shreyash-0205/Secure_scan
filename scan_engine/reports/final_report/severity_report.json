@@ -1,0 +1,49 @@
+{
+    "severity_summary": {
+        "High": 5,
+        "Medium": 0,
+        "Low": 0,
+        "Safe": 1
+    },
+    "scanner_breakdown": {
+        "broken_authentication": {
+            "High": 0,
+            "Medium": 0,
+            "Low": 0,
+            "Safe": 1
+        },
+        "csrf": {
+            "High": 2,
+            "Medium": 0,
+            "Low": 0,
+            "Safe": 0
+        },
+        "final_report": {
+            "High": 0,
+            "Medium": 0,
+            "Low": 0,
+            "Safe": 0
+        },
+        "http": {
+            "High": 2,
+            "Medium": 0,
+            "Low": 0,
+            "Safe": 0
+        },
+        "scan_summary": {
+            "High": 0,
+            "Medium": 0,
+            "Low": 0,
+            "Safe": 0
+        },
+        "sql_injection": {
+            "High": 1,
+            "Medium": 0,
+            "Low": 0,
+            "Safe": 0
+        }
+    },
+    "execution_times": {
+        "store": 0.04
+    }
+}
