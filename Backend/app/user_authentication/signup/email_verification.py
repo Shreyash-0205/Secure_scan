@@ -9,14 +9,14 @@ from email.mime.multipart import MIMEMultipart
 from database.db_connection import DatabaseConnection
 
 class EmailVerification:
-    def __init__(self):
-        self.email = os.getenv('ATHARVA_GMAIL_ID') # define new environment variabes
-        self.password = os.getenv('ATHARVA_GMAIL_PASSWORD')
+    def __init__(self, securescan_email, securescan_password):
+        self.email = securescan_email # define new environment variabes
+        self.password = securescan_password
         pass
 
-    def send_otp(self, username):
+    def send_otp(self, userEmail):
         """Retrieve user email and send OTP."""
-        email = self.get_user_email(username)
+        email = self.get_user_email(userEmail)
         if not email:
             return None, "Username not found."
 
@@ -28,13 +28,8 @@ class EmailVerification:
         else:
             return None, "Failed to send OTP."
 
-    def get_user_email(self, username):
-        """Retrieve user email from the database."""
-        db = DatabaseConnection()
-        db.connect()
-        email = db.fetch_user_email(username)
-        db.close()
-        return email
+    def get_user_email(self, userEmail):
+        return userEmail
 
     def generate_otp(self):
         """Generate a 6-digit OTP."""
@@ -92,50 +87,3 @@ class OTPVerificationLogic:
         else:
             return False, "Incorrect OTP."
 
-class ResetPasswordLogic:
-    def __init__(self, username):
-        self.username = username
-
-    def reset_password(self, new_password, confirm_password):
-        """Validate and update password in the database."""
-        if not new_password or not confirm_password:
-            return "Please enter all fields."
-
-        validation_error = self.validate_password(new_password)
-        if validation_error:
-            return validation_error
-
-        if new_password != confirm_password:
-            return "Passwords do not match."
-
-        hashed_password = self.hash_password(new_password)
-        self.update_password_in_database(hashed_password)
-
-        return "Password reset successfully."
-
-    def validate_password(self, password):
-        """Checks if the password meets security requirements."""
-        if len(password) < 8:
-            return "Password must be at least 8 characters long."
-        if not re.search(r"[A-Z]", password):
-            return "Password must contain at least one uppercase letter."
-        if not re.search(r"[a-z]", password):
-            return "Password must contain at least one lowercase letter."
-        if not re.search(r"\d", password):
-            return "Password must contain at least one digit."
-        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
-            return "Password must contain at least one special character (!@#$%^&* etc.)."
-        return None
-
-    def hash_password(self, password):
-        """Hashes the password using bcrypt."""
-        salt = bcrypt.gensalt()
-        return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
-
-    def update_password_in_database(self, hashed_password):
-        """Updates the user's password in the database."""
-        db = DatabaseConnection()
-        db.connect()
-        query = "UPDATE login SET password=%s WHERE username=%s"
-        db.execute_query(query, (hashed_password, self.username))
-        db.close()
