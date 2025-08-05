@@ -6,7 +6,7 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from Database.db_connection import DatabaseConnection
+from database.db_connection import DatabaseConnection
 
 class ForgotPasswordLogic:
     def __init__(self):
