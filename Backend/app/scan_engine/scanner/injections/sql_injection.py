@@ -38,19 +38,22 @@ class SQLInjectionScanner:
         """Test SQL Injection vulnerabilities for a given form."""
         print(f"\n🔍 Testing form at: {target_url}")
 
-        post_data = {"username": "admin", "password": ""}
+        input_fields = form.get("inputs",{}) # fuzzing through all the inputs
         sql_injection_found = False  # ✅ Flag to track vulnerability detection
 
+        base_data = {field: "test" for field in input_fields}
+
         for payload in self.PAYLOADS:
-            post_data["password"] = payload
+            test_data = base_data.copy()
+            test_data[field] = payload
             print(f"🛠️  Testing payload: {payload}")
 
             try:
-                response = requests.post(target_url, data=post_data, timeout=5)
+                response = requests.post(target_url, data=test_data, timeout=5)
 
                 if response.status_code == 200 and ("Welcome" in response.text or "Dashboard" in response.text):
                     print(f"  ⚠️ Possible SQL Injection Detected at {target_url}!")
-                    print(f"  🔹 Vulnerable payload: {payload}")
+                    print(f"  🔹 Vulnerable payload: {payload} in field: {field}")
 
                     if target_url not in self.scan_results:
                         self.scan_results[target_url] = []
@@ -107,7 +110,7 @@ class SQLInjectionScanner:
 
         for page in mapped_data.get("pages", []):
             for form in page.get("forms", []):
-                if form["method"] == "POST" and "username" in form["inputs"] and "password" in form["inputs"]:
+                if form.get("method", "").upper() == "POST" and "inputs" in form and isinstance(form["inputs"], dict) and form["inputs"]:
                     self.detect_sql_injection(form["action"], form)
 
         self.save_scan_results()
