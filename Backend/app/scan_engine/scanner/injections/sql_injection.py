@@ -1,5 +1,6 @@
 import requests
 import json
+import re
 
 
 class SQLInjectionScanner:
@@ -49,6 +50,30 @@ class SQLInjectionScanner:
         "Safe": "No SQL Injection vulnerabilities detected on this page."
     }
 
+    SQL_ERRORS = [
+        r"SQL syntax.*MySQL",
+        r"Warning.*mysql_",
+        r"valid MySQL result",
+        r"MySqlClient\.",
+        r"com\.mysql\.jdbc\.exceptions",
+        r"PostgreSQL.*ERROR",
+        r"org\.postgresql\.util\.PSQLException",
+        r"PG::SyntaxError:",
+        r"SQLite/JDBCDriver",
+        r"System\.Data\.SqlClient\.SqlException",
+        r"Unclosed quotation mark after the character string",
+        r"Microsoft OLE DB Provider for SQL Server",
+        r"Incorrect syntax near",
+        r"ODBC SQL Server Driver",
+        r"ORA-\d{5}",  # Oracle error codes like ORA-00933
+        r"Oracle error",
+        r"Microsoft Access Driver",
+        r"JET Database Engine",
+        r"supplied argument is not a valid MySQL",
+        r"SQL error.*",
+    ]
+
+
     def __init__(self, mapped_data_file="scan_engine/scanner/mapped_data.json", results_file="scan_engine/reports/scan_results_json/sql_injection.json"):
         self.mapped_data_file = mapped_data_file
         self.results_file = results_file
@@ -80,24 +105,33 @@ class SQLInjectionScanner:
             try:
                 response = requests.post(target_url, data=test_data, timeout=10)
 
+                vulnerable = False
+
                 if response.status_code == 200 and ("Welcome" in response.text or "Dashboard" in response.text):
-                    print(f"  ⚠️ Possible SQL Injection Detected at {target_url}!")
-                    print(f"  🔹 Vulnerable payload: {payload} in field: {field}")
+                    vulnerable = True
+                else:
+                    for pattern in self.SQL_ERRORS:
+                        if re.search(pattern, response.text, re.IGNORECASE):
+                            vulnerable = True
+                            break
+                        if vulnerable:
+                            print(f"  ⚠️ Possible SQL Injection Detected at {target_url}!")
+                            print(f"  🔹 Vulnerable payload: {payload} in field: {field}")
 
-                    if target_url not in self.scan_results:
-                        self.scan_results[target_url] = []
+                            if target_url not in self.scan_results:
+                                self.scan_results[target_url] = []
 
-                    severity = "High"
+                            severity = "High"
 
-                    self.scan_results[target_url].append({
-                        "payload": payload,
-                        "vulnerable": True,
-                        "severity": severity,
-                        "severity_description": self.SEVERITY[severity]
-                    })
+                            self.scan_results[target_url].append({
+                                "payload": payload,
+                                "vulnerable": True,
+                                "severity": severity,
+                                "severity_description": self.SEVERITY[severity]
+                            })
 
-                    sql_injection_found = True  #Set flag to True if SQLi is detected
-                    break 
+                            sql_injection_found = True  #Set flag to True if SQLi is detected
+                            break 
 
             except requests.RequestException as e:
                 print(f"  ❌ Error: {e}")
