@@ -73,6 +73,38 @@ class SQLInjectionScanner:
         r"SQL error.*",
     ]
 
+    DBMS_SIGNATURES = {
+        "MySQL": [
+            r"SQL syntax.*MySQL",
+            r"Warning.*mysql_",
+            r"MySqlClient\.",
+            r"valid MySQL result",
+            r"supplied argument is not a valid MySQL"
+        ],
+        "PostgreSQL": [
+            r"PostgreSQL.*ERROR",
+            r"org\.postgresql\.util\.PSQLException",
+            r"PG::SyntaxError:",
+            r"pg_sleep",
+        ],
+        "MSSQL": [
+            r"System\.Data\.SqlClient\.SqlException",
+            r"Unclosed quotation mark after the character string",
+            r"Microsoft OLE DB Provider for SQL Server",
+            r"Incorrect syntax near",
+            r"ODBC SQL Server Driver",
+            r"EXEC xp_cmdshell"
+        ],
+        "Oracle": [
+            r"ORA-\d{5}",
+            r"Oracle error"
+        ],
+        "SQLite": [
+            r"SQLite/JDBCDriver",
+            r"SQLITE_ERROR"
+        ]
+    }
+
 
     def __init__(self, mapped_data_file="scan_engine/scanner/mapped_data.json", results_file="scan_engine/reports/scan_results_json/sql_injection.json"):
         self.mapped_data_file = mapped_data_file
@@ -87,6 +119,14 @@ class SQLInjectionScanner:
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"⚠️ Error loading JSON file: {e}")
             return None
+    
+    def inter_dbms(self, response_text):
+        """Infer DBMS type from response content."""
+        for dbms, patterns in self.DBMS_SIGNATURES.items():
+            for pattern in patterns:
+                if re.search(pattern, response_text, re.IGNORECASE):
+                    return dbms
+        return "Unknown"
 
     def detect_sql_injection(self, target_url, form):
         """Test SQL Injection vulnerabilities for a given form."""
@@ -123,12 +163,15 @@ class SQLInjectionScanner:
                                     self.scan_results[target_url] = []
 
                                 severity = "High"
+                                inferred_dbms = self.infer_dbms(response.text)
 
                                 self.scan_results[target_url].append({
                                     "payload": payload,
                                     "vulnerable": True,
                                     "severity": severity,
-                                    "severity_description": self.SEVERITY[severity]
+                                    "severity_description": self.SEVERITY[severity],
+                                    "vulnerable_field": field,
+                                    "inferred_dbms": inferred_dbms
                                 })
 
                                 sql_injection_found = True  #Set flag to True if SQLi is detected
