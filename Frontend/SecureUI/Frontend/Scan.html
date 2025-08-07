@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecureScan - URL Scanner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .btn-dark { background-color: #1e1e1e; }
+    .btn-dark:hover { background-color: #333333; }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 1rem;
+    }
+    .dashboard-tile {
+      width: 100%;
+      padding: 15px;
+      background-color: rgba(255, 255, 255, 0.6);
+      border: 2px solid transparent;
+      border-radius: 10px;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      color: #1e1e1e;
+    }
+    .dashboard-tile:hover {
+      background-color: rgba(255, 255, 255, 0.8);
+      border-color: #1e1e1e;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .dashboard-active {
+      background-color: #1e1e1e !important;
+      color: white !important;
+      border-color: #1e1e1e !important;
+    }
+  </style>
+</head>
+<body class="font-sans bg-[#f9f9f9] text-gray-800">
+
+  <!-- Header -->
+  <header class="bg-white px-10 md:px-40 py-3 shadow-md flex justify-between items-center relative z-10">
+    <div class="flex items-center">
+      <img src="../Images/SecureLogo.jpg" alt="Logo" class="h-10">
+      <span class="text-2xl font-bold ml-2">SecureScan</span>
+    </div>
+    <nav class="hidden md:flex space-x-8">
+      <a href="index.html" class="hover:underline">Home</a>
+      <a href="#about" class="hover:underline">About</a>
+      <a href="#contact" class="hover:underline">Contact</a>
+      <a href="#team" class="hover:underline">Team</a>
+      <a href="login.html" class="hover:underline">Login</a>
+    </nav>
+    <div class="menu-icon md:hidden text-2xl cursor-pointer" onclick="toggleDashboard()" aria-label="Toggle Dashboard">&#9776;</div>
+  </header>
+
+  <div class="flex flex-grow">
+
+    <!-- Sidebar Dashboard (Desktop) -->
+    <aside id="dashboardPanel" class="hidden md:flex flex-col bg-white/30 glass-card p-6 w-64 min-h-screen border-r border-gray-200">
+      <h2 class="text-xl font-bold mb-6">Dashboard</h2>
+      <nav class="space-y-4">
+        <button id="quickScanBtn" class="dashboard-tile dashboard-active" onclick="openQuickScan()">Quick Scan</button>
+        <button id="customScanBtn" class="dashboard-tile" onclick="openCustomScan()">Custom Scan</button>
+        <button id="historyBtn" class="dashboard-tile" onclick="openHistory()">History</button>
+      </nav>
+    </aside>
+
+    <!-- Mobile Slide-in Dashboard -->
+    <div id="mobileDashboard" class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 z-50 transform -translate-x-full transition-transform duration-300 md:hidden">
+      <button class="mb-6 text-xl font-bold" onclick="toggleDashboard()">✕ Close</button>
+      <nav class="space-y-4">
+        <button id="mQuickScanBtn" class="dashboard-tile dashboard-active" onclick="openQuickScan();toggleDashboard();">Quick Scan</button>
+        <button id="mCustomScanBtn" class="dashboard-tile" onclick="openCustomScan();toggleDashboard();">Custom Scan</button>
+        <button id="mHistoryBtn" class="dashboard-tile" onclick="openHistory();toggleDashboard();">History</button>
+      </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex items-center justify-center px-6 py-10">
+      <div class="w-full max-w-2xl flex">
+        <input
+          type="url"
+          id="urlInput"
+          placeholder="Enter Website URL"
+          class="flex-grow bg-white border border-gray-300 text-lg rounded-l-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        />
+        <button
+          id="searchButton"
+          class="btn-dark text-white px-6 py-3 rounded-r-md transition"
+        >
+          Scan
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="w-full py-4 px-6 text-center text-gray-400 text-sm">
+    &copy; 2025 SecureScan. All rights reserved.
+  </footer>
+
+  <script>
+    function toggleDashboard() {
+      const panel = document.getElementById('mobileDashboard');
+      if (panel.classList.contains('-translate-x-full')) {
+        panel.classList.remove('-translate-x-full');
+      } else {
+        panel.classList.add('-translate-x-full');
+      }
+    }
+
+    function setActiveButton(id) {
+      document.querySelectorAll('.dashboard-tile').forEach(btn => btn.classList.remove('dashboard-active'));
+      document.getElementById(id).classList.add('dashboard-active');
+    }
+
+    function openQuickScan() {
+      setActiveButton('quickScanBtn');
+      setActiveButton('mQuickScanBtn');
+      console.log('Quick Scan Selected');
+      // Future: Load Quick Scan panel
+    }
+
+    function openCustomScan() {
+      setActiveButton('customScanBtn');
+      setActiveButton('mCustomScanBtn');
+      console.log('Custom Scan Selected');
+      // Future: Load Custom Scan panel
+    }
+
+    function openHistory() {
+      setActiveButton('historyBtn');
+      setActiveButton('mHistoryBtn');
+      console.log('History Selected');
+      // Future: Load History panel
+    }
+
+    document.getElementById('searchButton').addEventListener('click', function() {
+      const url = document.getElementById('urlInput').value.trim();
+      if (url) {
+        console.log('Scanning URL:', url);
+        alert('Scanning initiated for: ' + url);
+      } else {
+        alert('Please enter a valid URL.');
+      }
+    });
+
+    document.getElementById('urlInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        document.getElementById('searchButton').click();
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecureScan - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .mobile-menu {
+      transition: all 0.3s ease;
+      transform: translateY(-10px);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .mobile-menu.show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-bg {
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <div class="header bg-white px-10 md:px-40 py-3 shadow-md flex justify-between items-center relative z-10">
+    <div class="flex items-center">
+      <img src="../Images/SecureLogo.jpg" alt="Logo" class="h-10">
+      <span class="text-2xl font-bold ml-2">SecureScan</span>
+    </div>
+    <div class="nav-links hidden md:flex space-x-8">
+      <a href="index.html" class="hover:underline">Home</a>
+      <a href="index.html#about" class="hover:underline">About</a>
+      <a href="index.html#contact" class="hover:underline">Contact</a>
+      <a href="index.html#team" class="hover:underline">Team</a>
+      <a href="login.html" class="hover:underline">Login</a>
+    </div>
+    <div class="menu-icon md:hidden text-2xl cursor-pointer" onclick="toggleMenu()" aria-label="Toggle Menu">&#9776;</div>
+    <div class="mobile-menu absolute right-10 top-14 bg-white rounded-lg shadow-lg w-40 md:hidden" id="mobileMenu">
+      <a href="index.html" class="block px-4 py-2 hover:bg-gray-100">Home</a>
+      <a href="index.html#about" class="block px-4 py-2 hover:bg-gray-100">About</a>
+      <a href="index.html#contact" class="block px-4 py-2 hover:bg-gray-100">Contact</a>
+      <a href="index.html#team" class="block px-4 py-2 hover:bg-gray-100">Team</a>
+      <a href="login.html" class="block px-4 py-2 hover:bg-gray-100">Login</a>
+    </div>
+  </div>
+
+  <!-- Login Panel -->
+  <div class="flex-grow flex items-start md:items-center justify-center p-4 pt-20 md:pt-0">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden">
+      <!-- Left Image -->
+      <div class="hidden md:block md:w-1/2">
+        <img src="../Images/bg_green.jpg" alt="Background" class="w-full h-full object-cover">
+      </div>
+
+      <!-- Right Form -->
+      <div class="w-full md:w-1/2 p-8 flex flex-col justify-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
+        <p class="text-gray-500 mb-6 text-sm">Log in to your account</p>
+        <form id="loginForm" class="space-y-4">
+          <input type="email" placeholder="Email" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 outline-none">
+          <input type="password" placeholder="Password" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 outline-none">
+          <div class="text-right">
+            <a href="#" id="forgotPasswordLink" class="text-green-600 text-sm hover:underline">Forgot Password?</a>
+          </div>
+          <button type="submit" class="w-full py-3 rounded-xl text-white font-semibold bg-[#1b9262] hover:bg-green-700">Log In</button>
+        </form>
+        <p class="text-center mt-5 text-sm text-gray-600">
+          Don't have an account? <a href="registration.html" class="text-green-600 font-medium hover:underline">Register Now</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div id="forgotModal" class="fixed inset-0 flex items-center justify-center hidden modal-bg z-50">
+    <div class="bg-white rounded-xl shadow-xl w-80 p-6 relative">
+      <button id="closeModal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl">&times;</button>
+      <h2 class="text-xl font-semibold text-gray-800 mb-2">Forgot Password</h2>
+      <p class="text-sm text-gray-600 mb-4">Enter your email to reset your password.</p>
+      <form id="forgotForm" class="space-y-4">
+        <input type="email" placeholder="Your Email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none">
+        <button type="submit" class="w-full py-2 rounded-lg text-white font-semibold bg-[#1b9262] hover:bg-green-700">Send Reset Link</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      document.getElementById('mobileMenu').classList.toggle('show');
+    }
+
+    // Modal Logic
+    const forgotLink = document.getElementById('forgotPasswordLink');
+    const forgotModal = document.getElementById('forgotModal');
+    const closeModal = document.getElementById('closeModal');
+    const forgotForm = document.getElementById('forgotForm');
+
+    forgotLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      forgotModal.classList.remove('hidden');
+    });
+
+    closeModal.addEventListener('click', () => {
+      forgotModal.classList.add('hidden');
+    });
+
+    window.addEventListener('click', (e) => {
+      if (e.target === forgotModal) {
+        forgotModal.classList.add('hidden');
+      }
+    });
+
+    forgotForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('Reset link sent! (Integrate backend logic here)');
+      forgotModal.classList.add('hidden');
+    });
+  </script>
+</body>
+</html>
